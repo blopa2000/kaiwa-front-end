@@ -1,0 +1,5 @@
+<div class="w-80 bg-white border-r h-full flex flex-col">
+  <app-user-search (userSelected)="selectUser.emit($event)" />
+
+  <app-chat-list (chatSelected)="selectUser.emit($event)" />
+</div>

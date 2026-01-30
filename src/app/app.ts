@@ -7,6 +7,4 @@ import { RouterOutlet } from '@angular/router';
   template: '<router-outlet />',
   styleUrl: './app.css',
 })
-export class App {
-  protected readonly title = signal('kaiwa-front-end');
-}
+export class App {}

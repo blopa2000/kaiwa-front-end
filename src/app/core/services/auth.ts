@@ -2,11 +2,10 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs';
 import { TokenService } from './token';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private API_URL = 'http://localhost:8000/api';
-
   // estado global
   isAuthenticated = signal<boolean>(this.hasToken());
 
@@ -20,7 +19,7 @@ export class AuthService {
   }
 
   login(data: { email: string; password: string }) {
-    return this.http.post<any>(`${this.API_URL}/users/login/`, data).pipe(
+    return this.http.post<any>(`${environment.apiUrl}/users/login/`, data).pipe(
       tap((res) => {
         this.tokenService.setToken(res.access);
       }),
@@ -34,7 +33,7 @@ export class AuthService {
     first_name: string;
     last_name: string;
   }) {
-    return this.http.post(`${this.API_URL}/users/register/`, data);
+    return this.http.post(`${environment.apiUrl}/users/register/`, data);
   }
 
   setSession(access: string, refresh: string) {
