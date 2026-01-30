@@ -1,0 +1,97 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-100">
+  <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
+    <h2 class="text-2xl font-semibold text-center mb-6">Crear cuenta</h2>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+      <input
+        type="email"
+        formControlName="email"
+        placeholder="Correo electrónico"
+        class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500"
+      />
+      @if (form.get('email')?.touched && form.get('email')?.invalid) {
+        <p class="text-red-500 text-sm">
+          @if (form.get('email')?.errors?.['required']) {
+            El correo es obligatorio
+          }
+          @if (form.get('email')?.errors?.['email']) {
+            Correo inválido
+          }
+        </p>
+      }
+
+      <input
+        type="text"
+        formControlName="username"
+        placeholder="Nombre de usuario"
+        class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500"
+      />
+      @if (form.get('username')?.touched && form.get('username')?.invalid) {
+        <p class="text-red-500 text-sm">
+          @if (form.get('username')?.errors?.['required']) {
+            El nombre de usuario es obligatorio
+          }
+          @if (form.get('username')?.errors?.['minlength']) {
+            Mínimo 3 caracteres
+          }
+        </p>
+      }
+
+      <input
+        type="text"
+        formControlName="first_name"
+        placeholder="Nombre"
+        class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500"
+      />
+      @if (form.get('first_name')?.touched && form.get('first_name')?.invalid) {
+        <p class="text-red-500 text-sm">El nombre es obligatorio</p>
+      }
+
+      <input
+        type="text"
+        formControlName="last_name"
+        placeholder="Apellido"
+        class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500"
+      />
+      @if (form.get('last_name')?.touched && form.get('last_name')?.invalid) {
+        <p class="text-red-500 text-sm">El apellido es obligatorio</p>
+      }
+
+      <input
+        type="password"
+        formControlName="password"
+        placeholder="Contraseña"
+        class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500"
+      />
+
+      @if (form.get('password')?.touched && form.get('password')?.invalid) {
+        <p class="text-red-500 text-sm">
+          @if (form.get('password')?.errors?.['required']) {
+            La contraseña es obligatoria
+          }
+          @if (form.get('password')?.errors?.['minlength']) {
+            Mínimo 6 caracteres
+          }
+        </p>
+      }
+
+      <button
+        type="submit"
+        [disabled]="loading()"
+        class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition"
+      >
+        {{ loading() ? 'Creando cuenta...' : 'Registrarse' }}
+      </button>
+      <p class="text-red-500 text-sm">
+        @if (errorMessage()) {
+          {{ errorMessage() }}
+        }
+      </p>
+    </form>
+
+    <p class="text-sm text-center text-gray-600 mt-4">
+      ¿Ya tienes cuenta?
+      <a routerLink="/login" class="text-green-500 font-medium"> Inicia sesión </a>
+    </p>
+  </div>
+</div>

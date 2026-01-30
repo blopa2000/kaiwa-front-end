@@ -1,0 +1,52 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-100">
+  <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
+    <h2 class="text-2xl font-semibold text-center mb-6">Iniciar sesión</h2>
+
+    <form class="space-y-4" [formGroup]="form" (ngSubmit)="submit()">
+      <input
+        type="email"
+        formControlName="email"
+        placeholder="Correo electrónico"
+        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+      />
+      @if (form.get('email')?.touched && form.get('email')?.invalid) {
+        <p class="text-red-500 text-sm">
+          @if (form.get('email')?.errors?.['required']) {
+            El correo es obligatorio
+          }
+          @if (form.get('email')?.errors?.['email']) {
+            Correo inválido
+          }
+        </p>
+      }
+
+      <input
+        type="password"
+        formControlName="password"
+        placeholder="Contraseña"
+        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+      />
+      @if (form.get('password')?.touched && form.get('password')?.invalid) {
+        <p class="text-red-500 text-sm">La contraseña es obligatoria</p>
+      }
+
+      <button
+        type="submit"
+        [disabled]="loading()"
+        class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition"
+      >
+        {{ loading() ? 'Ingresando...' : 'Ingresar' }}
+      </button>
+      @if (errorMessage()) {
+        <p class="text-red-500 text-sm">
+          {{ errorMessage() }}
+        </p>
+      }
+    </form>
+
+    <p class="text-sm text-center text-gray-600 mt-4">
+      ¿No tienes cuenta?
+      <a routerLink="/register" class="text-green-500 font-medium"> Regístrate </a>
+    </p>
+  </div>
+</div>
