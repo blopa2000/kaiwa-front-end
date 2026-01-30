@@ -26,10 +26,6 @@ export class Login {
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
     });
-
-    if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/chat']);
-    }
   }
 
   submit(): void {
@@ -46,8 +42,7 @@ export class Login {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (res) => {
-          localStorage.setItem('access', res.access);
-          localStorage.setItem('refresh', res.refresh);
+          this.authService.setSession(res.access, res.refresh);
           this.router.navigate(['/chat']);
         },
         error: () => {

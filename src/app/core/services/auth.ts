@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs';
 import { TokenService } from './token';
@@ -7,10 +7,17 @@ import { TokenService } from './token';
 export class AuthService {
   private API_URL = 'http://localhost:8000/api';
 
+  // estado global
+  isAuthenticated = signal<boolean>(this.hasToken());
+
   constructor(
     private http: HttpClient,
     private tokenService: TokenService,
   ) {}
+
+  private hasToken(): boolean {
+    return !!localStorage.getItem('access');
+  }
 
   login(data: { email: string; password: string }) {
     return this.http.post<any>(`${this.API_URL}/users/login/`, data).pipe(
@@ -30,11 +37,15 @@ export class AuthService {
     return this.http.post(`${this.API_URL}/users/register/`, data);
   }
 
-  logout(): void {
-    this.tokenService.removeToken();
+  setSession(access: string, refresh: string) {
+    localStorage.setItem('access', access);
+    localStorage.setItem('refresh', refresh);
+    this.isAuthenticated.set(true);
   }
 
-  isAuthenticated(): boolean {
-    return this.tokenService.isLoggedIn();
+  logout() {
+    localStorage.removeItem('access');
+    localStorage.removeItem('refresh');
+    this.isAuthenticated.set(false);
   }
 }
