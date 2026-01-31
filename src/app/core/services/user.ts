@@ -11,4 +11,9 @@ export class UserService {
       params: { search: query },
     });
   }
+
+  //datos del usuario logueado
+  getCurrentUser() {
+    return this.http.get<any>(`${environment.apiUrl}/users/me/`);
+  }
 }

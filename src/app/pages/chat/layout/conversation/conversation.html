@@ -10,14 +10,15 @@
 
     <!-- Mensajes -->
     <div class="flex-1 p-4 overflow-y-auto flex flex-col-reverse">
+      {{ messages().length }}
       @if (messages().length > 0) {
         @for (msg of messages(); track msg.id) {
           <div
             class="mb-2 p-2 rounded-lg max-w-xs"
             [ngStyle]="{
-              'align-self': msg.sender.id === 0 ? 'flex-end' : 'flex-start',
-              'background-color': msg.sender.id === 0 ? '#3B82F6' : '#E5E7EB',
-              color: msg.sender.id === 0 ? '#FFFFFF' : '#1F2937',
+              'align-self': msg.sender_id === currentUserId ? 'flex-end' : 'flex-start',
+              'background-color': msg.sender_id === currentUserId ? '#3B82F6' : '#E5E7EB',
+              color: msg.sender_id === currentUserId ? '#FFFFFF' : '#1F2937',
             }"
           >
             {{ msg.content }}
