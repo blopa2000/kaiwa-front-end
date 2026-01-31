@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Sidebar } from './layout/sidebar/sidebar';
 import { Conversation } from './layout/conversation/conversation';
 
@@ -10,5 +10,8 @@ import { Conversation } from './layout/conversation/conversation';
   styleUrl: './chat.css',
 })
 export class Chat {
-  selectedUser = signal<any | null>(null);
+  roomId: number | null = null;
+  socket: WebSocket | null = null;
+
+  messageText = '';
 }

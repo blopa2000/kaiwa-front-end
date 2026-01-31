@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component } from '@angular/core';
 import { UserSearch } from '../../components/user-search/user-search';
 import { ChatList } from '../../components/chat-list/chat-list';
 
@@ -9,6 +9,4 @@ import { ChatList } from '../../components/chat-list/chat-list';
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
 })
-export class Sidebar {
-  @Output() selectUser = new EventEmitter<any>();
-}
+export class Sidebar {}

@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { UserService } from '../../../../core/services/user';
-import { ChatStore } from '../../../../core/services/chat-store';
+import { UserStore } from '../../../../core/store/user';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -13,7 +13,7 @@ import { CommonModule } from '@angular/common';
 })
 export class UserSearch {
   private userService = inject(UserService);
-  private chatStore = inject(ChatStore);
+  private userStore = inject(UserStore);
 
   searchControl = new FormControl('');
   results = signal<any[]>([]);
@@ -46,7 +46,7 @@ export class UserSearch {
   }
 
   selectUser(user: any) {
-    this.chatStore.activeChat.set(user);
+    this.userStore.setUser(user);
     this.results.set([]);
     this.searchControl.setValue('');
   }

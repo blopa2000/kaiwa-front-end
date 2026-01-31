@@ -1,14 +1,14 @@
 <div class="flex-1 overflow-y-auto">
-  @if (chatStore.chats().length === 0) {
+  @if (rooms.length === 0) {
     <div class="text-center text-gray-400 p-6">No tienes conversaciones aún</div>
   } @else {
-    @for (chat of chatStore.chats(); track chat.id) {
-      <div class="p-4 border-b hover:bg-gray-100 cursor-pointer" (click)="select(chat)">
+    @for (room of rooms; track room.id) {
+      <div class="p-4 border-b hover:bg-gray-100 cursor-pointer" (click)="select(room)">
         <div class="font-medium">
-          {{ chat.username }}
+          {{ room.other_user?.username || 'Desconocido' }}
         </div>
         <div class="text-sm text-gray-500 truncate">
-          {{ chat.lastMessage || 'Sin mensajes' }}
+          {{ room.last_message?.content || 'Sin mensajes' }}
         </div>
       </div>
     }

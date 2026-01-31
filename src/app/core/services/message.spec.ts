@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { ChatStore } from './chat-store';
+import { Message } from './message';
 
-describe('ChatStore', () => {
-  let service: ChatStore;
+describe('Message', () => {
+  let service: Message;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(ChatStore);
+    service = TestBed.inject(Message);
   });
 
   it('should be created', () => {

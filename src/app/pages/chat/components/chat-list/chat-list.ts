@@ -1,5 +1,6 @@
-import { Component, EventEmitter, Output, inject } from '@angular/core';
-import { ChatStore } from '../../../../core/services/chat-store';
+import { Component, inject, effect } from '@angular/core';
+import { RoomsStore } from '../../../../core/store/rooms';
+import { RoomsSocketService } from '../../../../core/services/rooms-socket';
 
 @Component({
   selector: 'app-chat-list',
@@ -7,12 +8,23 @@ import { ChatStore } from '../../../../core/services/chat-store';
   templateUrl: './chat-list.html',
 })
 export class ChatList {
-  chatStore = inject(ChatStore);
+  private roomsStore = inject(RoomsStore);
+  private roomsSocket = inject(RoomsSocketService);
 
-  @Output() chatSelected = new EventEmitter<any>();
+  constructor() {
+    const token = localStorage.getItem('access');
+    if (token) this.roomsSocket.connect(token);
 
-  select(chat: any) {
-    this.chatStore.selectChat(chat);
-    this.chatSelected.emit(chat);
+    effect(() => {
+      const _ = this.roomsStore.sortedRooms();
+    });
+  }
+
+  select(room: any) {
+    this.roomsStore.selectRoom(room);
+  }
+
+  get rooms() {
+    return this.roomsStore.sortedRooms();
   }
 }
