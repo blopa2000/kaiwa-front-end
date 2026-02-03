@@ -20,4 +20,10 @@ export class RoomsService {
   deleteRoom(roomId: number) {
     return this.http.delete(`${environment.apiUrl}/rooms/${roomId}/delete/`);
   }
+
+  findRoomWithUser(userId: number) {
+    return this.http.get<any>(`${environment.apiUrl}/rooms/find/`, {
+      params: { user_id: userId },
+    });
+  }
 }

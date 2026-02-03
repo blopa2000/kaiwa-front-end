@@ -1,40 +1,56 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ConversationSocketService {
-  private ws!: WebSocket;
-  private messageCallback?: (msg: any) => void;
+  private socket: WebSocket | null = null;
+  private onMessageCb?: (message: any) => void;
 
-  connectWithUser(userId: number) {
-    const token = localStorage.getItem('token');
-    this.ws = new WebSocket(`ws://.../ws/conversation/user/${userId}/?token=${token}`);
-    this.setupListeners();
-  }
+  constructor(private ngZone: NgZone) {}
 
-  connectWithRoom(roomId: number) {
-    const token = localStorage.getItem('token');
-    this.ws = new WebSocket(`ws://.../ws/conversation/room/${roomId}/?token=${token}`);
-    this.setupListeners();
-  }
+  connect(roomId: number) {
+    const token = localStorage.getItem('access');
+    if (!token) return;
 
-  private setupListeners() {
-    this.ws.onmessage = (event) => {
+    this.disconnect();
+
+    this.socket = new WebSocket(`${environment.socketUrl}/chat/${roomId}/?token=${token}`);
+
+    this.socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      if (data.type === 'message' && this.messageCallback) {
-        this.messageCallback(data.message);
-      }
+      if (data.type !== 'message') return;
+
+      this.ngZone.run(() => {
+        this.onMessageCb?.(data);
+      });
     };
   }
 
-  onMessage(cb: (msg: any) => void) {
-    this.messageCallback = cb;
+  send(content: string) {
+    if (!this.socket) return;
+
+    this.socket.send(
+      JSON.stringify({
+        type: 'message',
+        content,
+      }),
+    );
   }
 
-  sendMessage(content: string) {
-    this.ws.send(JSON.stringify({ content }));
+  onMessage(cb: (message: any) => void) {
+    this.onMessageCb = cb;
   }
 
   disconnect() {
-    if (this.ws) this.ws.close();
+    if (!this.socket) return;
+
+    if (
+      this.socket.readyState === WebSocket.OPEN ||
+      this.socket.readyState === WebSocket.CONNECTING
+    ) {
+      this.socket.close();
+    }
+
+    this.socket = null;
   }
 }

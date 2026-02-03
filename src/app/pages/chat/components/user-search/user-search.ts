@@ -4,6 +4,8 @@ import { UserStore } from '../../../../core/store/user';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { RoomsService } from '../../../../core/services/rooms';
+import { RoomsStore } from '../../../../core/store/rooms';
 
 @Component({
   selector: 'app-user-search',
@@ -13,7 +15,9 @@ import { CommonModule } from '@angular/common';
 })
 export class UserSearch {
   private userService = inject(UserService);
+  private roomsService = inject(RoomsService);
   private userStore = inject(UserStore);
+  private roomsStore = inject(RoomsStore);
 
   searchControl = new FormControl('');
   results = signal<any[]>([]);
@@ -46,9 +50,31 @@ export class UserSearch {
   }
 
   selectUser(user: any) {
-    this.userStore.setUser(user);
-    this.results.set([]);
-    this.searchControl.setValue('');
+    this.loading.set(true);
+
+    this.roomsService.findRoomWithUser(user.id).subscribe({
+      next: (res) => {
+        this.loading.set(false);
+        this.results.set([]);
+        this.searchControl.setValue('');
+
+        if (res.exists) {
+          //Ya existe chat → buscar room en el store
+          const room = this.roomsStore.rooms().find((r) => r.id === res.room_id);
+
+          if (room) {
+            this.userStore.clearUser();
+            this.roomsStore.selectRoom(room);
+          }
+        } else {
+          // 🟡 Chat nuevo
+          this.userStore.setUser(user);
+        }
+      },
+      error: () => {
+        this.loading.set(false);
+      },
+    });
   }
 
   get queryLength(): number {
