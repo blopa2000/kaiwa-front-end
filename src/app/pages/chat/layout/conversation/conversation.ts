@@ -23,6 +23,8 @@ export class Conversation {
 
   messageText = '';
   messages = signal<any[]>([]);
+  private lastChatId: number | null = null;
+  private lastChatType: 'room' | 'user' | null = null;
 
   /* ===== getters ===== */
 
@@ -46,10 +48,19 @@ export class Conversation {
     effect(() => {
       const room = this.activeRoom;
       const user = this.activeUser;
+      // 🧠 Determinar chat actual
+      const currentChatId = room?.id ?? user?.id ?? null;
+      const currentChatType = room ? 'room' : user ? 'user' : null;
 
       // 🔥 Reset visual total al cambiar de chat
-      this.messages.set([]);
-      this.messageText = '';
+      if (user || currentChatId !== this.lastChatId || currentChatType !== this.lastChatType) {
+        this.messages.set([]);
+        this.messageText = '';
+        this.socketService.disconnect();
+
+        this.lastChatId = currentChatId;
+        this.lastChatType = currentChatType;
+      }
 
       // Usuario nuevo (aún sin room)
       if (user) {
@@ -71,7 +82,13 @@ export class Conversation {
           // Ignorar mensajes que no sean del room activo
           if (this.activeRoom?.id !== roomId) return;
 
-          this.messages.update((msgs) => [msg, ...msgs]);
+          this.messages.update((msgs) => {
+            // 🚫 evitar duplicados
+            if (msgs.some((m) => m.id === msg.id)) {
+              return msgs;
+            }
+            return [msg, ...msgs];
+          });
         });
       }
     });
@@ -98,7 +115,6 @@ export class Conversation {
             this.roomsStore.selectRoom(room);
           });
         });
-
       return;
     }
 

@@ -27,6 +27,12 @@ export class RoomsSocketService {
         const { room_id, message } = data;
         this.roomsStore.updateRoomLastMessage(room_id, message);
       }
+
+      console.log(data);
+
+      if (data.type === 'room_created') {
+        this.roomsStore.addRoom(data.room);
+      }
     };
   }
 

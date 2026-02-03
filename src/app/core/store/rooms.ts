@@ -64,6 +64,13 @@ export class RoomsStore {
     this._rooms.set(this._rooms().filter((r) => r.id !== roomId));
   }
 
+  addRoom(room: any) {
+    const exists = this.rooms().some((r) => r.id === room.id);
+    if (exists) return;
+
+    this._rooms.update((rooms) => [room, ...rooms]);
+  }
+
   sortedRooms = computed(() =>
     [...this._rooms()].sort((a, b) => {
       const aTime = a.last_message?.created_at ? new Date(a.last_message.created_at).getTime() : 0;
