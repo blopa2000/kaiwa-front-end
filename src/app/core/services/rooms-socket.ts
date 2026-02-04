@@ -28,8 +28,6 @@ export class RoomsSocketService {
         this.roomsStore.updateRoomLastMessage(room_id, message);
       }
 
-      console.log(data);
-
       if (data.type === 'room_created') {
         this.roomsStore.addRoom(data.room);
       }

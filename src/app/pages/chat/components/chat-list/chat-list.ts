@@ -1,6 +1,7 @@
 import { Component, inject, effect } from '@angular/core';
 import { RoomsStore } from '../../../../core/store/rooms';
 import { RoomsSocketService } from '../../../../core/services/rooms-socket';
+import { UserStore } from '../../../../core/store/user';
 
 @Component({
   selector: 'app-chat-list',
@@ -10,6 +11,7 @@ import { RoomsSocketService } from '../../../../core/services/rooms-socket';
 export class ChatList {
   private roomsStore = inject(RoomsStore);
   private roomsSocket = inject(RoomsSocketService);
+  private userStore = inject(UserStore);
 
   constructor() {
     const token = localStorage.getItem('access');
@@ -26,5 +28,9 @@ export class ChatList {
 
   get rooms() {
     return this.roomsStore.sortedRooms();
+  }
+
+  get currentUserId() {
+    return this.userStore.currentUser()?.id;
   }
 }

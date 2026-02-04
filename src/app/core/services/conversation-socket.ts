@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 export class ConversationSocketService {
   private socket: WebSocket | null = null;
   private onMessageCb?: (message: any) => void;
+  private onReadCb?: (payload: any) => void;
 
   constructor(private ngZone: NgZone) {}
 
@@ -18,6 +19,11 @@ export class ConversationSocketService {
 
     this.socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
+
+      if (data.type === 'read') {
+        this.onReadCb?.(data);
+      }
+
       if (data.type !== 'message') return;
 
       this.ngZone.run(() => {
@@ -27,7 +33,9 @@ export class ConversationSocketService {
   }
 
   send(content: string) {
-    if (!this.socket) return;
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      return;
+    }
 
     this.socket.send(
       JSON.stringify({
@@ -36,9 +44,27 @@ export class ConversationSocketService {
       }),
     );
   }
+  markAsRead(messageIds: number[]) {
+    if (!this.socket || !messageIds.length) return;
+
+    this.socket.send(
+      JSON.stringify({
+        type: 'read',
+        message_ids: messageIds,
+      }),
+    );
+  }
 
   onMessage(cb: (message: any) => void) {
     this.onMessageCb = cb;
+  }
+
+  onRead(cb: (payload: any) => void) {
+    this.onReadCb = cb;
+  }
+
+  onMessagesRead(cb: (data: { message_ids: number[] }) => void) {
+    this.onReadCb = cb;
   }
 
   disconnect() {

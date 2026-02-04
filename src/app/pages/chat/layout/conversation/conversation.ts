@@ -89,6 +89,22 @@ export class Conversation {
             }
             return [msg, ...msgs];
           });
+
+          // marcar como leído si no es propio
+          if (msg.sender_id !== this.currentUserId && msg.read_at === null) {
+            this.socketService.markAsRead([msg.id]);
+          }
+        });
+
+        // evento de leído
+        this.socketService.onRead((payload) => {
+          const { message_ids } = payload;
+
+          this.messages.update((msgs) =>
+            msgs.map((m) =>
+              message_ids.includes(m.id) ? { ...m, read_at: new Date().toISOString() } : m,
+            ),
+          );
         });
       }
     });

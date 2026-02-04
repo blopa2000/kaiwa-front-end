@@ -22,6 +22,15 @@
             }"
           >
             {{ msg.content }}
+            <div class="flex justify-end text-xs opacity-70 mt-1">
+              @if (msg.sender_id === currentUserId) {
+                @if (msg.read_at) {
+                  ✔✔
+                } @else {
+                  ✔
+                }
+              }
+            </div>
           </div>
         }
       } @else {

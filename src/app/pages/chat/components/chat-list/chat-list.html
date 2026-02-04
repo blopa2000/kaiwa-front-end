@@ -10,6 +10,14 @@
         <div class="text-sm text-gray-500 truncate">
           {{ room.last_message?.content || 'Sin mensajes' }}
         </div>
+        <!-- indicador no leído -->
+        @if (
+          room.last_message &&
+          room.last_message.read_at === null &&
+          room.last_message.sender_id !== currentUserId
+        ) {
+          <div class="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
+        }
       </div>
     }
   }
