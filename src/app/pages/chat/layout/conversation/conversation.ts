@@ -4,6 +4,8 @@ import { RoomsStore } from '../../../../core/store/rooms';
 import { MessageService } from '../../../../core/services/message';
 import { RoomsService } from '../../../../core/services/rooms';
 import { ConversationSocketService } from '../../../../core/services/conversation-socket';
+import { PresenceSocketService } from '../../../../core/services/presence-socket';
+
 import { EmptyState } from '../../components/empty-state/empty-state';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -20,9 +22,11 @@ export class Conversation {
   roomsService = inject(RoomsService);
   messageService = inject(MessageService);
   socketService = inject(ConversationSocketService);
+  presenceSocket = inject(PresenceSocketService);
 
   messageText = '';
   messages = signal<any[]>([]);
+  typingTimeout?: any;
   private lastChatId: number | null = null;
   private lastChatType: 'room' | 'user' | null = null;
 
@@ -57,6 +61,7 @@ export class Conversation {
         this.messages.set([]);
         this.messageText = '';
         this.socketService.disconnect();
+        this.presenceSocket.disconnect();
 
         this.lastChatId = currentChatId;
         this.lastChatType = currentChatType;
@@ -106,8 +111,30 @@ export class Conversation {
             ),
           );
         });
+
+        // conectar presence
+        const token = localStorage.getItem('access');
+        if (token && !this.presenceSocket.isConnected()) {
+          this.presenceSocket.connect(token);
+          this.presenceSocket.onPresence(({ user_id, status }) => {
+            this.roomsStore.updateUserStatus(user_id, status);
+          });
+        }
       }
     });
+  }
+
+  onInputChange() {
+    // enviar typing al backend
+    this.presenceSocket.sendTyping();
+
+    // limpiar timeout previo
+    if (this.typingTimeout) clearTimeout(this.typingTimeout);
+
+    // después de 5s de inactividad, volver a online
+    this.typingTimeout = setTimeout(() => {
+      this.presenceSocket.sendOnline();
+    }, 1000);
   }
 
   sendMessage() {
