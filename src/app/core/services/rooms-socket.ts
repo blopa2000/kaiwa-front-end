@@ -9,6 +9,9 @@ export class RoomsSocketService {
   constructor(private roomsStore: RoomsStore) {}
 
   connect(token: string) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      return; // ya está conectado
+    }
     const url = `${environment.socketUrl}/rooms/?token=${token}`;
     this.ws = new WebSocket(url);
 

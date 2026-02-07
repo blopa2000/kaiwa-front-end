@@ -1,13 +1,11 @@
-import { Injectable, NgZone } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ConversationSocketService {
   private socket: WebSocket | null = null;
-  private onMessageCb?: (message: any) => void;
-  private onReadCb?: (payload: any) => void;
-
-  constructor(private ngZone: NgZone) {}
+  private onMessageCbs: ((msg: any) => void)[] = [];
+  private onReadCbs: ((payload: any) => void)[] = [];
 
   connect(roomId: number) {
     const token = localStorage.getItem('access');
@@ -19,64 +17,45 @@ export class ConversationSocketService {
 
     this.socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-
-      if (data.type === 'read') {
-        this.onReadCb?.(data);
-      }
-
-      if (data.type !== 'message') return;
-
-      this.ngZone.run(() => {
-        this.onMessageCb?.(data);
-      });
+      if (data.type === 'message') this.onMessageCbs.forEach((cb) => cb(data));
+      if (data.type === 'read') this.onReadCbs.forEach((cb) => cb(data));
     };
   }
 
-  send(content: string) {
-    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      return;
-    }
-
-    this.socket.send(
-      JSON.stringify({
-        type: 'message',
-        content,
-      }),
-    );
-  }
   markAsRead(messageIds: number[]) {
     if (!this.socket || !messageIds.length) return;
 
-    this.socket.send(
-      JSON.stringify({
-        type: 'read',
-        message_ids: messageIds,
-      }),
-    );
+    const send = () => {
+      this.socket!.send(JSON.stringify({ type: 'read', message_ids: messageIds }));
+    };
+
+    if (this.socket.readyState === WebSocket.OPEN) send();
+    else this.socket.addEventListener('open', send, { once: true });
   }
 
-  onMessage(cb: (message: any) => void) {
-    this.onMessageCb = cb;
+  send(content: string) {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+    this.socket.send(JSON.stringify({ type: 'message', content }));
+  }
+
+  onMessage(cb: (msg: any) => void) {
+    this.onMessageCbs.push(cb);
   }
 
   onRead(cb: (payload: any) => void) {
-    this.onReadCb = cb;
-  }
-
-  onMessagesRead(cb: (data: { message_ids: number[] }) => void) {
-    this.onReadCb = cb;
+    this.onReadCbs.push(cb);
   }
 
   disconnect() {
     if (!this.socket) return;
-
     if (
       this.socket.readyState === WebSocket.OPEN ||
       this.socket.readyState === WebSocket.CONNECTING
     ) {
       this.socket.close();
     }
-
     this.socket = null;
+    this.onMessageCbs = [];
+    this.onReadCbs = [];
   }
 }

@@ -1,0 +1,29 @@
+<div class="relative">
+  <button (click)="toggleMenu()" class="flex items-center gap-2 p-2 hover:bg-gray-200 rounded-lg">
+    <img
+      {{userStore.currentUser()?.photo}}
+      [src]="userStore.currentUser()?.photo || 'avatar.svg'"
+      class="w-8 h-8 rounded-full object-cover"
+    />
+  </button>
+
+  @if (open()) {
+    <div class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-xl border">
+      <button
+        class="block w-full text-left px-4 py-2 hover:bg-gray-100"
+        (click)="openProfileModal()"
+      >
+        Actualizar datos
+      </button>
+
+      <button
+        class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500"
+        (click)="logout()"
+      >
+        Cerrar sesión
+      </button>
+    </div>
+  }
+</div>
+
+<app-profile-modal [open]="modalOpen()" (close)="modalOpen.set(false)"></app-profile-modal>

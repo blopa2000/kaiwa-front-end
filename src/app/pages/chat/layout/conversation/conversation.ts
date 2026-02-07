@@ -30,8 +30,6 @@ export class Conversation {
   private lastChatId: number | null = null;
   private lastChatType: 'room' | 'user' | null = null;
 
-  /* ===== getters ===== */
-
   get activeUser() {
     return this.userStore.selectedUser();
   }
@@ -49,89 +47,101 @@ export class Conversation {
   }
 
   constructor() {
+    // CALLBACK global para mensajes leídos
+    this.socketService.onRead((payload) => {
+      const { message_ids } = payload;
+      this.messages.update((msgs) =>
+        msgs.map((m) =>
+          message_ids.includes(m.id) ? { ...m, read_at: new Date().toISOString() } : m,
+        ),
+      );
+    });
+
+    // CALLBACK global para mensajes directos
+    this.socketService.onMessage((msg) => {
+      if (this.activeUser && msg.sender_id === this.activeUser.id) {
+        this.messages.update((msgs) => {
+          if (msgs.some((m) => m.id === msg.id)) return msgs;
+          return [msg, ...msgs];
+        });
+
+        if (msg.sender_id !== this.currentUserId && !msg.read_at) {
+          this.socketService.markAsRead([msg.id]);
+        }
+      }
+    });
+
+    // Effect principal: cambiar de chat / room
     effect(() => {
       const room = this.activeRoom;
       const user = this.activeUser;
-      // 🧠 Determinar chat actual
+
       const currentChatId = room?.id ?? user?.id ?? null;
       const currentChatType = room ? 'room' : user ? 'user' : null;
 
-      // 🔥 Reset visual total al cambiar de chat
-      if (user || currentChatId !== this.lastChatId || currentChatType !== this.lastChatType) {
-        this.messages.set([]);
-        this.messageText = '';
-        this.socketService.disconnect();
-        this.presenceSocket.disconnect();
+      const chatChanged =
+        currentChatId !== this.lastChatId || currentChatType !== this.lastChatType;
 
-        this.lastChatId = currentChatId;
-        this.lastChatType = currentChatType;
-      }
+      if (!chatChanged && !user) return;
 
-      // Usuario nuevo (aún sin room)
-      if (user) {
-        return;
-      }
+      // reset visual
+      this.messages.set([]);
+      this.messageText = '';
+      this.socketService.disconnect();
+      this.presenceSocket.disconnect();
 
-      // Cerramos cualquier socket previo
-      if (!user) {
-        this.socketService.disconnect();
-      }
+      this.lastChatId = currentChatId;
+      this.lastChatType = currentChatType;
 
-      // Room existente
+      if (user) return; // chat directo, no socket
+
       if (room) {
         const roomId = room.id;
-
         this.socketService.connect(roomId);
 
+        // 1️⃣ Marcar los mensajes existentes como leídos al entrar a la room
+        setTimeout(() => {
+          const unreadIds = this.messages()
+            .filter((m) => !m.read_at && m.sender_id !== this.currentUserId)
+            .map((m) => m.id);
+
+          if (unreadIds.length) {
+            this.socketService.markAsRead(unreadIds);
+          }
+        }, 100);
+
+        // 2️⃣ Escuchar nuevos mensajes
         this.socketService.onMessage((msg) => {
-          // Ignorar mensajes que no sean del room activo
           if (this.activeRoom?.id !== roomId) return;
 
           this.messages.update((msgs) => {
-            // 🚫 evitar duplicados
-            if (msgs.some((m) => m.id === msg.id)) {
-              return msgs;
+            if (msgs.some((m) => m.id === msg.id)) return msgs;
+
+            // marcar como leído si no es nuestro
+            if (msg.sender_id !== this.currentUserId && !msg.read_at) {
+              this.socketService.markAsRead([msg.id]);
             }
+
             return [msg, ...msgs];
           });
-
-          // marcar como leído si no es propio
-          if (msg.sender_id !== this.currentUserId && msg.read_at === null) {
-            this.socketService.markAsRead([msg.id]);
-          }
         });
 
-        // evento de leído
+        // 3️⃣ Escuchar eventos de read
         this.socketService.onRead((payload) => {
           const { message_ids } = payload;
-
           this.messages.update((msgs) =>
             msgs.map((m) =>
               message_ids.includes(m.id) ? { ...m, read_at: new Date().toISOString() } : m,
             ),
           );
         });
-
-        // conectar presence
-        const token = localStorage.getItem('access');
-        if (token && !this.presenceSocket.isConnected()) {
-          this.presenceSocket.connect(token);
-          this.presenceSocket.onPresence(({ user_id, status }) => {
-            this.roomsStore.updateUserStatus(user_id, status);
-          });
-        }
       }
     });
   }
 
   onInputChange() {
-    // enviar typing al backend
     this.presenceSocket.sendTyping();
-
-    // limpiar timeout previo
     if (this.typingTimeout) clearTimeout(this.typingTimeout);
-
-    // después de 5s de inactividad, volver a online
     this.typingTimeout = setTimeout(() => {
       this.presenceSocket.sendOnline();
     }, 1000);
@@ -141,7 +151,6 @@ export class Conversation {
     const content = this.messageText.trim();
     if (!content || !this.chat) return;
 
-    // PRIMER MENSAJE (no hay room)
     if (this.activeUser) {
       this.messageService
         .sendFirstMessage({
@@ -161,7 +170,7 @@ export class Conversation {
       return;
     }
 
-    // ROOM EXISTENTE
+    // ROOM existente
     this.socketService.send(content);
     this.messageText = '';
   }

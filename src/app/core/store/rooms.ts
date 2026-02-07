@@ -16,14 +16,36 @@ export class RoomsStore {
   }
 
   updateRoom(room: any) {
-    const rooms = [...this._rooms()];
-    const index = rooms.findIndex((r) => r.id === room.id);
-    if (index > -1) {
-      rooms[index] = room;
-    } else {
-      rooms.push(room);
+    this._rooms.update((rooms) => {
+      const index = rooms.findIndex((r) => r.id === room.id);
+
+      // Si no existe → agregar
+      if (index === -1) {
+        return [room, ...rooms];
+      }
+
+      // Si existe → actualizar solo campos necesarios
+      const updatedRoom = {
+        ...rooms[index], // conservar other_user
+        last_message: room.last_message ?? rooms[index].last_message,
+        updated_at: room.updated_at ?? rooms[index].updated_at,
+      };
+
+      const newRooms = [...rooms];
+      newRooms[index] = updatedRoom;
+
+      return newRooms;
+    });
+
+    // sincronizar activeRoom
+    const active = this._activeRoom();
+    if (active && active.id === room.id) {
+      this._activeRoom.set({
+        ...active,
+        last_message: room.last_message ?? active.last_message,
+        updated_at: room.updated_at ?? active.updated_at,
+      });
     }
-    this._rooms.set(rooms);
   }
 
   updateRoomLastMessage(roomId: number, message: any) {

@@ -16,4 +16,12 @@ export class UserService {
   getCurrentUser() {
     return this.http.get<any>(`${environment.apiUrl}/users/me/`);
   }
+
+  updateProfile(data: any) {
+    return this.http.patch(`${environment.apiUrl}/users/me/`, data);
+  }
+
+  uploadPhoto(formData: FormData) {
+    return this.http.patch(`${environment.apiUrl}/users/upload-photo/`, formData);
+  }
 }

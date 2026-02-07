@@ -3,14 +3,29 @@
     <div class="text-center text-gray-400 p-6">No tienes conversaciones aún</div>
   } @else {
     @for (room of rooms; track room.id) {
-      <div class="p-4 border-b hover:bg-gray-100 cursor-pointer" (click)="select(room)">
-        <div class="font-medium">
-          {{ room.other_user?.username || 'Desconocido' }}
+      <div
+        class="p-4 border-b hover:bg-gray-100 cursor-pointer flex items-center gap-3"
+        (click)="select(room)"
+      >
+        <!-- Foto del usuario -->
+        <img
+          [src]="room.other_user?.photo || 'avatar.svg'"
+          alt="avatar"
+          class="w-10 h-10 rounded-full object-cover"
+        />
+
+        <!-- Contenido -->
+        <div class="flex-1 min-w-0">
+          <div class="font-medium">
+            {{ room.other_user?.username || 'Desconocido' }}
+          </div>
+
+          <div class="text-sm text-gray-500 truncate">
+            {{ room.last_message?.content || 'Sin mensajes' }}
+          </div>
         </div>
-        <div class="text-sm text-gray-500 truncate">
-          {{ room.last_message?.content || 'Sin mensajes' }}
-        </div>
-        <!-- indicador no leído -->
+
+        <!-- Indicador no leído -->
         @if (
           room.last_message &&
           room.last_message.read_at === null &&

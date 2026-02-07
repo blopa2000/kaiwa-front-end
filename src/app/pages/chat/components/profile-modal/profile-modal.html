@@ -1,0 +1,72 @@
+@if (open) {
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div class="bg-white rounded-2xl shadow-lg w-[400px] p-6">
+      <h2 class="text-lg font-semibold mb-4">Actualizar perfil</h2>
+
+      <!-- Cambiar foto -->
+      <div class="mb-6 flex flex-col items-center">
+        <label class="block font-medium mb-3">Cambiar foto</label>
+
+        <!-- Imagen clickeable -->
+        <div class="relative cursor-pointer" (click)="fileInput.click()">
+          <img
+            [src]="previewUrl() || userCurrent()?.photo || 'avatar.svg'"
+            class="w-24 h-24 rounded-full object-cover border shadow"
+          />
+
+          <!-- Overlay opcional -->
+          <div
+            class="absolute inset-0 bg-black/30 rounded-full opacity-0 hover:opacity-100 flex items-center justify-center text-white text-sm transition"
+          >
+            Cambiar
+          </div>
+        </div>
+
+        <!-- Input oculto -->
+        <input
+          #fileInput
+          type="file"
+          accept="image/*"
+          class="hidden"
+          (change)="onFileSelected($event)"
+        />
+
+        <button
+          (click)="uploadPhoto()"
+          [disabled]="uploading"
+          class="mt-3 bg-blue-500 text-white px-4 py-2 rounded-lg disabled:opacity-50"
+        >
+          {{ uploading ? 'Subiendo...' : 'Guardar foto' }}
+        </button>
+      </div>
+
+      <!-- Datos usuario -->
+      <form [formGroup]="profileForm" (ngSubmit)="updateProfile()">
+        <label class="block font-medium mb-1">Username</label>
+        <input type="text" formControlName="username" class="w-full border rounded-lg p-2 mb-3" />
+
+        <label class="block font-medium mb-1">Nombre</label>
+        <input type="text" formControlName="first_name" class="w-full border rounded-lg p-2 mb-3" />
+
+        <label class="block font-medium mb-1">Apellido</label>
+        <input type="text" formControlName="last_name" class="w-full border rounded-lg p-2 mb-3" />
+
+        @if (errorMessage()) {
+          <div class="text-red-500 text-sm mb-2">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <button
+          type="submit"
+          [disabled]="profileForm.invalid || saving()"
+          class="mt-2 bg-green-500 text-white px-4 py-2 rounded-lg w-full disabled:opacity-50"
+        >
+          {{ saving() ? 'Guardando...' : 'Actualizar datos' }}
+        </button>
+      </form>
+
+      <button (click)="close.emit()" class="mt-4 text-gray-500 w-full">Cancelar</button>
+    </div>
+  </div>
+}

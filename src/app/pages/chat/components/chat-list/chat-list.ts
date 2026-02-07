@@ -1,4 +1,4 @@
-import { Component, inject, effect } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { RoomsStore } from '../../../../core/store/rooms';
 import { RoomsSocketService } from '../../../../core/services/rooms-socket';
 import { UserStore } from '../../../../core/store/user';
@@ -8,18 +8,20 @@ import { UserStore } from '../../../../core/store/user';
   standalone: true,
   templateUrl: './chat-list.html',
 })
-export class ChatList {
+export class ChatList implements OnInit, OnDestroy {
   private roomsStore = inject(RoomsStore);
   private roomsSocket = inject(RoomsSocketService);
   private userStore = inject(UserStore);
 
-  constructor() {
+  ngOnInit() {
     const token = localStorage.getItem('access');
-    if (token) this.roomsSocket.connect(token);
+    if (token) {
+      this.roomsSocket.connect(token);
+    }
+  }
 
-    effect(() => {
-      const _ = this.roomsStore.sortedRooms();
-    });
+  ngOnDestroy() {
+    this.roomsSocket.disconnect();
   }
 
   select(room: any) {
