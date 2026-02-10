@@ -19,7 +19,11 @@
     </div>
 
     <!-- Mensajes -->
-    <div class="flex-1 p-4 overflow-y-auto flex flex-col-reverse">
+    <div
+      #messagesContainer
+      class="flex-1 p-4 overflow-y-auto flex flex-col"
+      (scroll)="onScroll($event)"
+    >
       {{ messages().length }}
       @if (messages().length > 0) {
         @for (msg of messages(); track msg.id) {

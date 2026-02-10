@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect } from '@angular/core';
+import { Component, inject, signal, effect, ElementRef, ViewChild } from '@angular/core';
 import { UserStore } from '../../../../core/store/user';
 import { RoomsStore } from '../../../../core/store/rooms';
 import { MessageService } from '../../../../core/services/message';
@@ -27,8 +27,13 @@ export class Conversation {
   messageText = '';
   messages = signal<any[]>([]);
   typingTimeout?: any;
+  loadingOlder = false;
+  hasMore = true;
   private lastChatId: number | null = null;
   private lastChatType: 'room' | 'user' | null = null;
+
+  @ViewChild('messagesContainer', { static: false })
+  container!: ElementRef;
 
   get activeUser() {
     return this.userStore.selectedUser();
@@ -44,6 +49,14 @@ export class Conversation {
 
   get currentUserId() {
     return this.userStore.currentUser()?.id;
+  }
+
+  private scrollToBottom() {
+    setTimeout(() => {
+      if (!this.container) return;
+      const el = this.container.nativeElement;
+      el.scrollTop = el.scrollHeight;
+    }, 50);
   }
 
   constructor() {
@@ -89,6 +102,7 @@ export class Conversation {
       this.messageText = '';
       this.socketService.disconnect();
       this.presenceSocket.disconnect();
+      this.hasMore = true;
 
       this.lastChatId = currentChatId;
       this.lastChatType = currentChatType;
@@ -122,8 +136,9 @@ export class Conversation {
               this.socketService.markAsRead([msg.id]);
             }
 
-            return [msg, ...msgs];
+            return [...msgs, msg];
           });
+          this.scrollToBottom();
         });
 
         // 3️⃣ Escuchar eventos de read
@@ -135,6 +150,28 @@ export class Conversation {
             ),
           );
         });
+
+        // conectar presence
+        const token = localStorage.getItem('access');
+        if (token && !this.presenceSocket.isConnected()) {
+          this.presenceSocket.connect(token);
+          this.presenceSocket.onPresence(({ user_id, status }) => {
+            this.roomsStore.updateUserStatus(user_id, status);
+          });
+        }
+
+        setTimeout(() => {
+          const unreadIds = this.messages()
+            .filter((m) => !m.read_at && m.sender_id !== this.currentUserId)
+            .map((m) => m.id);
+
+          if (unreadIds.length) {
+            this.socketService.markAsRead(unreadIds);
+          }
+        }, 100);
+
+        // bajar scroll inicial
+        setTimeout(() => this.scrollToBottom(), 100);
       }
     });
   }
@@ -173,5 +210,45 @@ export class Conversation {
     // ROOM existente
     this.socketService.send(content);
     this.messageText = '';
+  }
+
+  onScroll(event: any) {
+    const element = event.target;
+
+    // console.log(element.scrollTop);
+    // console.log(this.loadingOlder);
+    // console.log(this.hasMore);
+
+    if (element.scrollTop <= 10 && !this.loadingOlder && this.hasMore) {
+      this.loadOlderMessages(() => {
+        // mover un poco el scroll hacia abajo
+        element.scrollTop = 50;
+      });
+    }
+  }
+
+  loadOlderMessages(callback?: () => void) {
+    if (!this.activeRoom || this.loadingOlder) return;
+
+    const msgs = this.messages();
+    if (!msgs.length) return;
+
+    const oldestId = msgs[0].id;
+
+    this.loadingOlder = true;
+
+    this.messageService.getOlderMessages(this.activeRoom.id, oldestId).subscribe((res) => {
+      this.messages.update((current) => {
+        const existingIds = new Set(current.map((m) => m.id));
+        const newMsgs = res.results.filter((m: any) => !existingIds.has(m.id));
+        return [...newMsgs, ...current];
+      });
+
+      this.hasMore = res.results.length > 0;
+
+      this.loadingOlder = false;
+
+      callback?.();
+    });
   }
 }

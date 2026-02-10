@@ -1,6 +1,7 @@
 import { Component, signal, inject } from '@angular/core';
 import { UserStore } from '../../../../core/store/user';
 import { ProfileModalComponent } from '../profile-modal/profile-modal';
+import { TokenService } from '../../../../core/services/token';
 
 @Component({
   selector: 'app-user-menu',
@@ -10,6 +11,7 @@ import { ProfileModalComponent } from '../profile-modal/profile-modal';
 })
 export class UserMenuComponent {
   userStore = inject(UserStore);
+  tokenService = inject(TokenService);
 
   open = signal(false);
   modalOpen = signal(false);
@@ -24,7 +26,7 @@ export class UserMenuComponent {
   }
 
   logout() {
-    localStorage.removeItem('token');
+    this.tokenService.removeToken();
     location.reload();
   }
 }
