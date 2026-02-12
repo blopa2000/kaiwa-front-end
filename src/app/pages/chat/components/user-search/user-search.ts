@@ -6,12 +6,11 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RoomsService } from '../../../../core/services/rooms';
 import { RoomsStore } from '../../../../core/store/rooms';
-import { UserMenuComponent } from '../user-menu/user-menu';
 
 @Component({
   selector: 'app-user-search',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, UserMenuComponent],
+  imports: [ReactiveFormsModule, CommonModule],
   templateUrl: './user-search.html',
 })
 export class UserSearch {

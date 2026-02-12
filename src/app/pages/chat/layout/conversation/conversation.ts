@@ -7,14 +7,19 @@ import { ConversationSocketService } from '../../../../core/services/conversatio
 import { PresenceSocketService } from '../../../../core/services/presence-socket';
 
 import { EmptyState } from '../../components/empty-state/empty-state';
+import { UserInfoPanelComponent } from '../../components/user-info-panel/user-info-panel';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-conversation',
   standalone: true,
-  imports: [EmptyState, FormsModule, CommonModule],
+  imports: [EmptyState, UserInfoPanelComponent, FormsModule, CommonModule],
   templateUrl: './conversation.html',
+  styleUrl: './conversation.css',
+  host: {
+    class: 'flex-1 flex min-w-0',
+  },
 })
 export class Conversation {
   userStore = inject(UserStore);
@@ -26,6 +31,7 @@ export class Conversation {
 
   messageText = '';
   messages = signal<any[]>([]);
+  showUserPanel = signal(false);
   typingTimeout?: any;
   loadingOlder = false;
   hasMore = true;
@@ -34,6 +40,9 @@ export class Conversation {
 
   @ViewChild('messagesContainer', { static: false })
   container!: ElementRef;
+
+  @ViewChild('messageInput', { static: false })
+  messageInput!: ElementRef<HTMLTextAreaElement>;
 
   get activeUser() {
     return this.userStore.selectedUser();
@@ -100,6 +109,7 @@ export class Conversation {
       // reset visual
       this.messages.set([]);
       this.messageText = '';
+      this.showUserPanel.set(false); // 👈 Cerrar panel al cambiar de chat
       this.socketService.disconnect();
       this.presenceSocket.disconnect();
       this.hasMore = true;
@@ -176,12 +186,71 @@ export class Conversation {
     });
   }
 
-  onInputChange() {
+  toggleUserPanel(): void {
+    this.showUserPanel.update((v) => !v);
+  }
+
+  onEnterPress(event: KeyboardEvent): void {
+    // Si presiona Enter sin Shift, envía el mensaje
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.sendMessage();
+    }
+    // Si presiona Shift + Enter, permite el salto de línea (comportamiento por defecto)
+  }
+
+  onInputChange(event?: Event) {
+    // Auto-resize del textarea
+    if (this.messageInput) {
+      const textarea = this.messageInput.nativeElement;
+      textarea.style.height = '44px';
+      textarea.style.height = Math.min(textarea.scrollHeight, 128) + 'px';
+    }
+
+    // Enviar estado "escribiendo"
     this.presenceSocket.sendTyping();
     if (this.typingTimeout) clearTimeout(this.typingTimeout);
     this.typingTimeout = setTimeout(() => {
       this.presenceSocket.sendOnline();
     }, 1000);
+  }
+
+  formatMessageTime(date: string | Date): string {
+    const messageDate = new Date(date);
+    return messageDate.toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  closeConversation(): void {
+    // 1. Cerrar panel de usuario
+    this.showUserPanel.set(false);
+
+    // 2. Limpiar mensajes
+    this.messages.set([]);
+
+    // 3. Limpiar texto del input
+    this.messageText = '';
+
+    // 4. Resetear altura del textarea si existe
+    if (this.messageInput) {
+      this.messageInput.nativeElement.style.height = '44px';
+    }
+
+    // 5. Desconectar sockets
+    this.socketService.disconnect();
+    this.presenceSocket.disconnect();
+
+    // 6. Resetear estados
+    this.hasMore = true;
+    this.loadingOlder = false;
+    this.lastChatId = null;
+    this.lastChatType = null;
+
+    // 7. Limpiar selección activa en el store
+    this.roomsStore.clearActiveRoom();
+    this.userStore.clearUser();
   }
 
   sendMessage() {
@@ -196,6 +265,12 @@ export class Conversation {
         })
         .subscribe(() => {
           this.messageText = '';
+
+          // Resetear altura del textarea
+          if (this.messageInput) {
+            this.messageInput.nativeElement.style.height = '44px';
+          }
+
           this.userStore.clearUser();
 
           this.roomsService.getLastRoom().subscribe((room) => {
@@ -210,14 +285,15 @@ export class Conversation {
     // ROOM existente
     this.socketService.send(content);
     this.messageText = '';
+
+    //Resetear altura del textarea
+    if (this.messageInput) {
+      this.messageInput.nativeElement.style.height = '44px';
+    }
   }
 
   onScroll(event: any) {
     const element = event.target;
-
-    // console.log(element.scrollTop);
-    // console.log(this.loadingOlder);
-    // console.log(this.hasMore);
 
     if (element.scrollTop <= 10 && !this.loadingOlder && this.hasMore) {
       this.loadOlderMessages(() => {

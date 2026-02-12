@@ -1,38 +1,68 @@
-<div class="flex-1 overflow-y-auto">
+<div
+  class="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400"
+>
   @if (rooms.length === 0) {
-    <div class="text-center text-gray-400 p-6">No tienes conversaciones aún</div>
+    <div class="text-center text-gray-400 p-8">
+      <svg
+        class="w-16 h-16 mx-auto mb-3 text-gray-300"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+        />
+      </svg>
+      <p class="font-medium text-gray-500">No tienes conversaciones aún</p>
+      <p class="text-sm text-gray-400 mt-1">Busca usuarios para empezar a chatear</p>
+    </div>
   } @else {
     @for (room of rooms; track room.id) {
       <div
-        class="p-4 border-b hover:bg-gray-100 cursor-pointer flex items-center gap-3"
+        class="p-4 hover:bg-gray-50 cursor-pointer transition border-b border-gray-100 flex items-center gap-3"
+        [class.bg-blue-50]="room.selected"
         (click)="select(room)"
       >
-        <!-- Foto del usuario -->
-        <img
-          [src]="room.other_user?.photo || 'avatar.svg'"
-          alt="avatar"
-          class="w-10 h-10 rounded-full object-cover"
-        />
+        <!-- Avatar -->
+        <div class="relative shrink-0">
+          <img
+            [src]="room.other_user?.photo || 'avatar.jpg'"
+            alt="avatar"
+            class="w-12 h-12 rounded-full object-cover"
+          />
+        </div>
 
         <!-- Contenido -->
         <div class="flex-1 min-w-0">
-          <div class="font-medium">
-            {{ room.other_user?.username || 'Desconocido' }}
+          <div class="flex items-center justify-between mb-1">
+            <h4 class="font-semibold text-gray-900 truncate">
+              {{ room.other_user?.username || 'Desconocido' }}
+            </h4>
+            @if (room.last_message?.created_at) {
+              <span class="text-xs text-gray-400 shrink-0 ml-2">
+                {{ room.last_message.created_at | timeAgo }}
+              </span>
+            }
           </div>
 
-          <div class="text-sm text-gray-500 truncate">
-            {{ room.last_message?.content || 'Sin mensajes' }}
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-sm text-gray-500 truncate flex-1">
+              {{ room.last_message?.content || 'Sin mensajes' }}
+            </p>
+
+            <!-- Indicador no leído -->
+            @if (
+              room.last_message &&
+              room.last_message.read_at === null &&
+              room.last_message.sender_id !== currentUserId
+            ) {
+              <div class="w-2.5 h-2.5 bg-blue-500 rounded-full shrink-0"></div>
+            }
           </div>
         </div>
-
-        <!-- Indicador no leído -->
-        @if (
-          room.last_message &&
-          room.last_message.read_at === null &&
-          room.last_message.sender_id !== currentUserId
-        ) {
-          <div class="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
-        }
       </div>
     }
   }

@@ -48,6 +48,10 @@ export class RoomsStore {
     }
   }
 
+  clearActiveRoom(): void {
+    this._activeRoom.set(null);
+  }
+
   updateRoomLastMessage(roomId: number, message: any) {
     this._rooms.update((rooms) => {
       const index = rooms.findIndex((r) => r.id === roomId);

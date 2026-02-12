@@ -1,26 +1,68 @@
-<div class="relative">
-  <button (click)="toggleMenu()" class="flex items-center gap-2 p-2 hover:bg-gray-200 rounded-lg">
-    <img
-      {{userStore.currentUser()?.photo}}
-      [src]="userStore.currentUser()?.photo || 'avatar.svg'"
-      class="w-8 h-8 rounded-full object-cover"
-    />
-  </button>
+<div class="p-4 border-b border-gray-200 relative">
+  <div class="flex items-center justify-between">
+    <!-- Usuario info -->
+    <div class="flex items-center gap-3">
+      <img
+        [src]="userStore.currentUser()?.photo || 'avatar.svg'"
+        class="w-12 h-12 rounded-full object-cover"
+      />
+      <div>
+        <h3 class="font-semibold text-gray-900">
+          {{ userStore.currentUser()?.first_name }} {{ userStore.currentUser()?.last_name }}
+        </h3>
+      </div>
+    </div>
 
+    <!-- Botón menú -->
+    <button
+      (click)="toggleMenu()"
+      class="hover:cursor-pointer p-2 hover:bg-gray-100 rounded-lg transition"
+    >
+      <svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+        <path
+          d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"
+        />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Dropdown menu - CAMBIADO: right-4 por right-0 y agregado top-14 -->
   @if (open()) {
-    <div class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-xl border">
+    <div
+      class="absolute right-1 top-15 w-56 bg-white shadow-lg rounded-lg border border-gray-200 overflow-hidden z-20"
+    >
       <button
-        class="block w-full text-left px-4 py-2 hover:bg-gray-100"
+        class="hover:cursor-pointer block w-full text-left px-4 py-3 hover:bg-blue-50 transition text-gray-700"
         (click)="openProfileModal()"
       >
-        Actualizar datos
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
+          </svg>
+          Actualizar datos
+        </div>
       </button>
 
       <button
-        class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500"
+        class="hover:cursor-pointer block w-full text-left px-4 py-3 hover:bg-red-50 transition text-red-600"
         (click)="logout()"
       >
-        Cerrar sesión
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            />
+          </svg>
+          Cerrar sesión
+        </div>
       </button>
     </div>
   }

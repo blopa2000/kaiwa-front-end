@@ -2,11 +2,14 @@ import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { RoomsStore } from '../../../../core/store/rooms';
 import { RoomsSocketService } from '../../../../core/services/rooms-socket';
 import { UserStore } from '../../../../core/store/user';
+import { TimeAgoPipe } from '../../../../shared/pipes/time-ago-pipe';
 
 @Component({
   selector: 'app-chat-list',
   standalone: true,
+  imports: [TimeAgoPipe],
   templateUrl: './chat-list.html',
+  styleUrl: 'chat-list.css',
 })
 export class ChatList implements OnInit, OnDestroy {
   private roomsStore = inject(RoomsStore);

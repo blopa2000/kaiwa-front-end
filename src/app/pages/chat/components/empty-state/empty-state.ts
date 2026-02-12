@@ -5,7 +5,8 @@ import { Component } from '@angular/core';
   imports: [],
   templateUrl: './empty-state.html',
   styleUrl: './empty-state.css',
+  host: {
+    class: 'flex flex-1 h-full',
+  },
 })
-export class EmptyState {
-
-}
+export class EmptyState {}

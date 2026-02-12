@@ -1,67 +1,185 @@
-<div class="h-screen flex flex-col bg-gray-50">
-  <!-- Si no hay chat ni room activa -->
-  @if (!chat) {
-    <app-empty-state />
-  } @else {
-    <!-- Header del chat -->
-    <div class="p-4 border-b bg-white font-medium">
-      Chat con {{ chat.username || chat.other_user?.username }}
-    </div>
-
-    <div class="text-xs text-gray-500">
-      @if (chat.other_user?.status === 'typing') {
-        escribiendo...
-      } @else if (chat.other_user?.status === 'online') {
-        en línea
-      } @else {
-        desconectado
-      }
-    </div>
-
-    <!-- Mensajes -->
-    <div
-      #messagesContainer
-      class="flex-1 p-4 overflow-y-auto flex flex-col"
-      (scroll)="onScroll($event)"
-    >
-      {{ messages().length }}
-      @if (messages().length > 0) {
-        @for (msg of messages(); track msg.id) {
-          <div
-            class="mb-2 p-2 rounded-lg max-w-xs"
-            [ngStyle]="{
-              'align-self': msg.sender_id === currentUserId ? 'flex-end' : 'flex-start',
-              'background-color': msg.sender_id === currentUserId ? '#3B82F6' : '#E5E7EB',
-              color: msg.sender_id === currentUserId ? '#FFFFFF' : '#1F2937',
-            }"
-          >
-            {{ msg.content }}
-            <div class="flex justify-end text-xs opacity-70 mt-1">
-              @if (msg.sender_id === currentUserId) {
-                @if (msg.read_at) {
-                  ✔✔
-                } @else {
-                  ✔
-                }
+<div class="flex flex-1 bg-gray-50 min-w-0 h-full">
+  <!-- Área principal de conversación -->
+  <div
+    class="flex flex-col transition-all duration-300"
+    [ngClass]="{
+      'flex-1 w-full': !showUserPanel(),
+      'flex-2': showUserPanel(),
+    }"
+  >
+    @if (!chat) {
+      <app-empty-state />
+    } @else {
+      <!-- Header del chat -->
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <div class="flex items-center gap-3">
+          <img
+            [src]="chat.other_user?.photo || 'avatar.jpg'"
+            class="w-12 h-12 rounded-full object-cover cursor-pointer hover:opacity-80 transition"
+            (click)="toggleUserPanel()"
+          />
+          <div class="flex-1 min-w-0">
+            <h3
+              class="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition truncate"
+              (click)="toggleUserPanel()"
+            >
+              {{ chat.username || chat.other_user?.username }}
+            </h3>
+            <div class="text-sm">
+              @if (chat.other_user?.status === 'typing') {
+                <span class="text-blue-500">escribiendo...</span>
+              } @else if (chat.other_user?.status === 'online') {
+                <span class="text-green-500">en línea</span>
+              } @else {
+                <span class="text-gray-400">desconectado</span>
               }
             </div>
           </div>
-        }
-      } @else {
-        <div class="text-center text-gray-400">No hay mensajes aún</div>
-      }
-    </div>
 
-    <!-- Input de mensaje -->
-    <div class="p-4 border-t bg-white">
-      <input
-        type="text"
-        placeholder="Escribe un mensaje"
-        class="w-full px-4 py-2 rounded-lg border"
-        [(ngModel)]="messageText"
-        (input)="onInputChange()"
-        (keydown.enter)="sendMessage()"
-      />
-    </div>
+          <!-- Botón para mostrar panel de usuario -->
+          <button
+            (click)="toggleUserPanel()"
+            class="hover:cursor-pointer p-2 hover:bg-gray-100 rounded-lg transition"
+            [class.bg-blue-50]="showUserPanel()"
+          >
+            <svg
+              class="w-6 h-6 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mensajes -->
+      <div
+        #messagesContainer
+        class="flex-1 p-4 overflow-y-auto flex flex-col gap-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400"
+        (scroll)="onScroll($event)"
+      >
+        @if (messages().length > 0) {
+          @for (msg of messages(); track msg.id) {
+            <div
+              class="flex"
+              [class.justify-end]="msg.sender_id === currentUserId"
+              [class.justify-start]="msg.sender_id !== currentUserId"
+            >
+              <div
+                class="max-w-[70%] md:max-w-md px-4 py-2 rounded-2xl wrap-break-word"
+                [class.bg-blue-500]="msg.sender_id === currentUserId"
+                [class.text-white]="msg.sender_id === currentUserId"
+                [class.bg-gray-300]="msg.sender_id !== currentUserId"
+                [class.text-gray-900]="msg.sender_id !== currentUserId"
+                [class.rounded-br-sm]="msg.sender_id === currentUserId"
+                [class.rounded-bl-sm]="msg.sender_id !== currentUserId"
+              >
+                <p class="wrap-break-word whitespace-pre-wrap">{{ msg.content }}</p>
+                <div
+                  class="flex items-center justify-end gap-1 text-xs mt-1"
+                  [class.text-blue-100]="msg.sender_id === currentUserId"
+                  [class.text-gray-400]="msg.sender_id !== currentUserId"
+                >
+                  <span>{{ formatMessageTime(msg.created_at) }}</span>
+                  @if (msg.sender_id === currentUserId) {
+                    <span class="ml-1">
+                      @if (msg.read_at) {
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          />
+                          <path
+                            d="M12.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-1-1a1 1 0 011.414-1.414l.293.293 7.293-7.293a1 1 0 011.414 0z"
+                          />
+                        </svg>
+                      } @else {
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fill-rule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clip-rule="evenodd"
+                          />
+                        </svg>
+                      }
+                    </span>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        } @else {
+          <div class="flex-1 flex items-center justify-center">
+            <div class="text-center text-gray-400">
+              <svg
+                class="w-16 h-16 mx-auto mb-3 text-gray-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+              <p class="font-medium">No hay mensajes aún</p>
+              <p class="text-sm mt-1">Envía un mensaje para comenzar la conversación</p>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Input de mensaje -->
+      <div class="bg-white border-t border-gray-200 p-4">
+        <form (submit)="sendMessage(); $event.preventDefault()" class="flex items-center gap-2">
+          <div class="flex-1 relative">
+            <textarea
+              #messageInput
+              [(ngModel)]="messageText"
+              name="message"
+              (input)="onInputChange()"
+              (keydown)="onEnterPress($event)"
+              placeholder="Escribe un mensaje..."
+              rows="1"
+              class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none max-h-32 scrollbar-thin"
+              style="min-height: 44px"
+            ></textarea>
+          </div>
+
+          <!-- Botón enviar -->
+          <button
+            type="submit"
+            [disabled]="!messageText.trim()"
+            class="p-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition shrink-0"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+              />
+            </svg>
+          </button>
+        </form>
+      </div>
+    }
+  </div>
+
+  <!-- Panel de información del usuario -->
+  @if (showUserPanel() && chat) {
+    <app-user-info-panel
+      [user]="chat.other_user"
+      (closeConversation)="closeConversation()"
+      class="flex-1 transition-all duration-300"
+    />
   }
 </div>

@@ -1,0 +1,4 @@
+.bg-img{
+  background-image: linear-gradient(rgb(0 102 255 / 91%), rgb(0 153 255 / 84%)), 
+      url(../../../../public/backgroundIMG.jpg);
+}
