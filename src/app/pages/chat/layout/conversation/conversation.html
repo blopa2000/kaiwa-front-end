@@ -13,6 +13,26 @@
       <!-- Header del chat -->
       <div class="bg-white border-b border-gray-200 px-6 py-4">
         <div class="flex items-center gap-3">
+          @if (showBackButton) {
+            <button
+              (click)="onBackClick()"
+              class="p-2 hover:bg-gray-100 rounded-lg transition shrink-0"
+            >
+              <svg
+                class="w-6 h-6 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+          }
           <img
             [src]="chat.other_user?.photo || 'avatar.jpg'"
             alt="avatar"
@@ -179,7 +199,9 @@
   @if (showUserPanel() && chat) {
     <app-user-info-panel
       [user]="chat.other_user"
+      [isMobile]="showBackButton"
       (closeConversation)="closeConversation()"
+      (backToConversation)="closeUserPanel()"
       class="flex-1 transition-all duration-300"
     />
   }

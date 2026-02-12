@@ -23,9 +23,15 @@ interface User {
 })
 export class UserInfoPanelComponent {
   @Input() user: User | null = null;
-  @Output() closeConversation = new EventEmitter<void>(); // 👈 NUEVO
+  @Input() isMobile = false;
+  @Output() closeConversation = new EventEmitter<void>();
+  @Output() backToConversation = new EventEmitter<void>();
 
   onCloseConversation(): void {
     this.closeConversation.emit();
+  }
+
+  onBackToConversation(): void {
+    this.backToConversation.emit();
   }
 }

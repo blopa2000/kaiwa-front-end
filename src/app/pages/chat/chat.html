@@ -1,8 +1,27 @@
 <div class="bg-img min-h-screen flex justify-center bg-gray-100 p-2 md:p-4">
   <div
-    class="w-full max-w-350 h-[calc(100vh-1rem)] md:h-[calc(100vh-2rem)] flex bg-white rounded-lg shadow-xl overflow-hidden"
+    class="w-full max-w-350 h-[calc(100vh-1rem)] md:h-[calc(100vh-2rem)] flex bg-white rounded-lg shadow-xl overflow-hidden relative"
   >
-    <app-sidebar />
-    <app-conversation />
+    <!-- Sidebar -->
+    <div
+      class="h-full transition-all duration-300 bg-white"
+      [class.hidden]="isMobile() && !showSidebar()"
+      [class.absolute]="isMobile()"
+      [class.inset-0]="isMobile()"
+      [class.z-30]="isMobile()"
+      [class.w-80]="!isMobile()"
+    >
+      <app-sidebar />
+    </div>
+
+    <!-- Conversation -->
+    <div
+      class="transition-all duration-300 flex-1 flex min-w-0"
+      [class.hidden]="isMobile() && showSidebar()"
+      [class.flex-1]="!isMobile()"
+      [class.w-full]="isMobile()"
+    >
+      <app-conversation [showBackButton]="isMobile()" (backClicked)="showSidebarView()" />
+    </div>
   </div>
 </div>

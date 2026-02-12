@@ -1,4 +1,14 @@
-import { Component, inject, signal, effect, ElementRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  effect,
+  ElementRef,
+  ViewChild,
+  Input,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import { UserStore } from '../../../../core/store/user';
 import { RoomsStore } from '../../../../core/store/rooms';
 import { MessageService } from '../../../../core/services/message';
@@ -28,6 +38,9 @@ export class Conversation {
   messageService = inject(MessageService);
   socketService = inject(ConversationSocketService);
   presenceSocket = inject(PresenceSocketService);
+
+  @Input() showBackButton = false;
+  @Output() backClicked = new EventEmitter<void>();
 
   messageText = '';
   messages = signal<any[]>([]);
@@ -251,6 +264,15 @@ export class Conversation {
     // 7. Limpiar selección activa en el store
     this.roomsStore.clearActiveRoom();
     this.userStore.clearUser();
+  }
+
+  onBackClick(): void {
+    this.backClicked.emit();
+    // NO llamar closeConversation aquí, solo emitir el evento
+  }
+
+  closeUserPanel(): void {
+    this.showUserPanel.set(false);
   }
 
   sendMessage() {
