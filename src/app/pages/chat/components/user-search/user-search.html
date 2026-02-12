@@ -39,7 +39,11 @@
           (click)="selectUser(user)"
         >
           <div class="flex items-center gap-3">
-            <img [src]="user.photo || 'avatar.jpg'" class="w-10 h-10 rounded-full object-cover" />
+            <img
+              [src]="user.photo || 'avatar.jpg'"
+              class="w-10 h-10 rounded-full object-cover"
+              alt="avatar"
+            />
             <div>
               <div class="font-medium text-gray-900">{{ user.username }}</div>
               <div class="text-sm text-gray-500">{{ user.first_name }} {{ user.last_name }}</div>
