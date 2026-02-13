@@ -5,6 +5,7 @@ import { guestGuard } from './core/guards/guest-guard';
 export const routes: Routes = [
   {
     path: '',
+    canActivate: [guestGuard],
     loadComponent: () => import('./pages/landing/landing').then((m) => m.Landing),
   },
   {
