@@ -3,17 +3,27 @@ import { catchError, throwError } from 'rxjs';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { TokenService } from '../services/token';
+import { AuthService } from '../services/auth';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const tokenService = inject(TokenService);
+  const authService = inject(AuthService);
 
   // Endpoints públicos (NO token)
   if (req.url.includes('/login') || req.url.includes('/register')) {
     return next(req);
   }
 
-  const token = localStorage.getItem('access_token');
+  // Verificar si el token ha expirado ANTES de hacer la petición
+  if (!authService.isAuthenticated()) {
+    console.warn('Token expirado antes de la petición, redirigiendo...');
+    tokenService.removeToken();
+    router.navigate(['/login']);
+    return throwError(() => new Error('Token expirado'));
+  }
+
+  const token = tokenService.getToken();
 
   if (token) {
     req = req.clone({
@@ -26,7 +36,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((error) => {
       if (error.status === 401) {
-        console.warn('Sesión expirada');
+        console.warn('Error 401: Sesión expirada o no autorizada');
 
         tokenService.removeToken();
 

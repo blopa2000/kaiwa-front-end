@@ -7,6 +7,7 @@ export const authGuard: CanActivateFn = () => {
   const router = inject(Router);
 
   if (!authService.isAuthenticated()) {
+    console.warn('Usuario no autenticado o token expirado');
     router.navigate(['/login']);
     return false;
   }

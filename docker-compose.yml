@@ -1,0 +1,15 @@
+services:
+  frontend:
+    build: .
+    container_name: chatapp-frontend
+    ports:
+      - "4200:4200"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - kaiwa_network
+
+networks:
+  kaiwa_network:
+    external: true
