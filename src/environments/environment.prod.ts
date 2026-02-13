@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://tu-dominio.com/api',
-  socketUrl: 'ws://localhost:8000/ws',
+  apiUrl: 'https://kaiwa-back-end.onrender.com/api',
+  socketUrl: 'https://kaiwa-back-end.onrender.com/ws',
 };
